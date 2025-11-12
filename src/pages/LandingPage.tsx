@@ -1,151 +1,306 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { BookOpen, Users, Shield, Mail } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  BookOpen,
+  Users,
+  Shield,
+  Mail,
+  CheckCircle2,
+  Globe,
+  Workflow,
+  BarChart3,
+  ClipboardCheck,
+} from "lucide-react";
 
 const LandingPage: React.FC = () => {
+  const { scrollYProgress } = useScroll();
+  const y1 = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
+
   const features = [
     {
       icon: BookOpen,
-      title: 'Assignment Management',
-      description: 'Create, manage, and track student assignments with ease',
+      title: "Assignment Management",
+      description:
+        "Create, manage, and track assignments efficiently across departments.",
     },
     {
       icon: Users,
-      title: 'Role-Based Access',
-      description: 'Separate dashboards for admins, monitors, and students',
+      title: "Role-Based Dashboards",
+      description:
+        "Dedicated dashboards for Admins, Monitors, and Students with secure permissions.",
     },
     {
       icon: Shield,
-      title: 'Secure Authentication',
-      description: 'JWT-based authentication with admin approval system',
+      title: "Secure Authentication",
+      description:
+        "JWT-based access with AES encryption ensures complete data protection.",
     },
     {
       icon: Mail,
-      title: 'Email Submissions',
-      description: 'PDF submissions sent directly to monitors via email',
+      title: "Smart Notifications",
+      description:
+        "Instant email and in-app notifications for assignment updates.",
+    },
+  ];
+
+  const plans = [
+    {
+      title: "Student",
+      price: "Free",
+      features: [
+        "Submit assignments",
+        "View grades",
+        "Receive feedback",
+        "Email updates",
+      ],
+    },
+    {
+      title: "Monitor",
+      price: "$9/mo",
+      features: [
+        "Create & review assignments",
+        "Grade submissions",
+        "Communicate with students",
+        "Analytics dashboard",
+      ],
+    },
+    {
+      title: "Institution",
+      price: "$49/mo",
+      features: [
+        "Unlimited users",
+        "Advanced analytics",
+        "Custom branding",
+        "Priority support",
+      ],
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "Dr. Sarah Ahmed",
+      text: "Our faculty reduced assignment management time by 70%. The dashboard is intuitive and fast.",
+      role: "Dean, EDUX University",
+    },
+    {
+      name: "Amit Sharma",
+      text: "An excellent platform for collaborative learning. Secure, fast, and beautifully designed.",
+      role: "Lecturer, Bright Scholars College",
+    },
+  ];
+
+  const workflowSteps = [
+    {
+      icon: Workflow,
+      title: "Assignment Creation",
+      text: "Admins or monitors create structured assignments with clear deadlines and grading criteria.",
+    },
+    {
+      icon: ClipboardCheck,
+      title: "Student Submission",
+      text: "Students submit assignments through a secure, intuitive interface with upload tracking.",
+    },
+    {
+      icon: Users,
+      title: "Review & Feedback",
+      text: "Monitors review submissions, provide detailed feedback, and assign grades instantly.",
+    },
+    {
+      icon: BarChart3,
+      title: "Analytics & Insights",
+      text: "Admins access performance analytics and engagement metrics in real time.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
+    <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 text-gray-900 transition-all duration-500">
+      {/* NAVBAR */}
+      <nav className="fixed w-full z-50 backdrop-blur-md bg-white/70 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+          <Link
+            to="/"
+            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent"
           >
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
-              Assignment
-              <br />
-              Management
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Streamline your educational workflow with our comprehensive platform for managing student assignments, submissions, and communications.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  to="/login"
-                  className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Sign In
-                </Link>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  to="/register"
-                  className="inline-block px-8 py-4 bg-white text-gray-700 font-semibold rounded-2xl shadow-lg hover:shadow-xl border-2 border-purple-200 hover:border-purple-300 transition-all duration-300"
-                >
-                  Get Started
-                </Link>
-              </motion.div>
-            </div>
-          </motion.div>
+            AssignPro
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/login" className="hover:text-indigo-500">
+              Login
+            </Link>
+            <Link
+              to="/register"
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow hover:shadow-lg transition-all"
+            >
+              Sign Up
+            </Link>
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Features Section */}
-      <div className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center mb-16"
+      {/* HERO SECTION */}
+      <motion.section
+        className="pt-40 pb-28 text-center relative overflow-hidden"
+        style={{ y: y1 }}
+      >
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-6xl md:text-7xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
+        >
+          Simplify Education <br /> with Smart Assignment Management
+        </motion.h1>
+        <p className="text-lg md:text-xl mt-6 max-w-2xl mx-auto text-gray-600">
+          A professional platform for schools and universities to manage
+          assignments, submissions, and feedback in one place.
+        </p>
+        <div className="mt-10 flex justify-center gap-5">
+          <Link
+            to="/register"
+            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Powerful features designed to make assignment management effortless for educators and students.
-            </p>
-          </motion.div>
+            Get Started
+          </Link>
+          <Link
+            to="/learn-more"
+            className="px-8 py-4 border border-gray-300 rounded-full hover:bg-gray-100 transition-all"
+          >
+            Learn More
+          </Link>
+        </div>
+      </motion.section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* FEATURES SECTION */}
+      <section className="py-24">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <h2 className="text-4xl font-bold mb-12">Powerful Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * index }}
-                className="relative group"
+                transition={{ delay: index * 0.1 }}
+                className="p-6 rounded-2xl bg-white shadow-md border border-gray-200 hover:shadow-xl transition-all"
               >
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:border-purple-200">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
+                <feature.icon className="w-10 h-10 mx-auto text-indigo-600 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600">{feature.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA Section */}
-      <div className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Ready to Get Started?
-            </h2>
-            <p className="text-lg md:text-xl mb-8 opacity-90">
-              Join thousands of educators who trust our platform for their assignment management needs.
-            </p>
+      {/* SYSTEM WORKFLOW (Animated Cards) */}
+      <section className="py-24 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 text-white text-center">
+        <Globe className="mx-auto mb-6 w-12 h-12" />
+        <h2 className="text-4xl font-bold mb-6">System Planning & Workflow</h2>
+        <p className="max-w-3xl mx-auto mb-16 opacity-90">
+          AssignPro connects admins, monitors, and students through a seamless,
+          automated workflow — from creation to grading — powered by smart
+          analytics.
+        </p>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6">
+          {workflowSteps.map((step, index) => (
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              key={step.title}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.15, duration: 0.6 }}
+              viewport={{ once: true }}
+              className="p-8 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg hover:scale-105 hover:bg-white/20 transition-all"
             >
-              <Link
-                to="/register"
-                className="inline-block px-8 py-4 bg-white text-purple-600 font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Create Your Account
-              </Link>
+              <step.icon className="w-10 h-10 mx-auto mb-4 text-yellow-300" />
+              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+              <p className="opacity-90 text-sm">{step.text}</p>
             </motion.div>
-          </motion.div>
+          ))}
         </div>
-      </div>
+      </section>
+
+      {/* PRICING SECTION */}
+      <section className="py-24 text-center">
+        <h2 className="text-4xl font-bold mb-12">Flexible Pricing</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-6">
+          {plans.map((plan) => (
+            <motion.div
+              key={plan.title}
+              whileHover={{ scale: 1.05 }}
+              className="p-8 rounded-3xl bg-white border border-gray-200 shadow-md hover:shadow-xl"
+            >
+              <h3 className="text-2xl font-bold mb-2">{plan.title}</h3>
+              <p className="text-3xl font-extrabold text-indigo-600 mb-4">
+                {plan.price}
+              </p>
+              <ul className="text-left space-y-3 mb-8">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <CheckCircle2 className="text-green-500 w-5 h-5" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full font-semibold">
+                Choose Plan
+              </button>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="py-24 bg-gray-50">
+        <h2 className="text-4xl font-bold text-center mb-12">
+          Trusted by Educators
+        </h2>
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 px-6">
+          {testimonials.map((t, index) => (
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.2 }}
+              className="p-8 bg-white rounded-3xl border border-gray-200 shadow-lg"
+            >
+              <p className="italic text-gray-700 mb-4">“{t.text}”</p>
+              <div className="font-semibold text-indigo-600">{t.name}</div>
+              <div className="text-sm text-gray-500">{t.role}</div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white text-center">
+        <h2 className="text-4xl font-bold mb-6">Start Managing Smarter</h2>
+        <p className="mb-8 text-lg opacity-90">
+          Join thousands of institutions streamlining their academic workflow
+          with AssignPro.
+        </p>
+        <div className="flex justify-center gap-6">
+          <Link
+            to="/login"
+            className="px-8 py-4 rounded-full bg-white text-purple-600 font-semibold shadow-lg hover:shadow-xl"
+          >
+            Login
+          </Link>
+          <Link
+            to="/register"
+            className="px-8 py-4 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 font-semibold shadow-lg hover:shadow-xl"
+          >
+            Sign Up
+          </Link>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-6 text-center border-t border-gray-200 text-gray-500 text-sm">
+        © {new Date().getFullYear()} AssignPro — Empowering Digital Education.
+      </footer>
     </div>
   );
 };
