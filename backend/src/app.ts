@@ -53,7 +53,7 @@ app.use(errorHandler);
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ message: 'You are On Route Try api/health' });
 });
 
 export default app;
