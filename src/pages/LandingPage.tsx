@@ -236,70 +236,45 @@ const LandingPage: React.FC = () => {
               <p className="text-3xl font-extrabold text-indigo-600 mb-4">
                 {plan.price}
               </p>
-              <ul className="text-left space-y-3 mb-8">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2">
-                    <CheckCircle2 className="text-green-500 w-5 h-5" />
-                    {f}
+              <ul className="text-left text-sm text-gray-600 mb-6">
+                {plan.features.map((feature, idx) => (
+                  <li key={idx} className="mb-2">
+                    <CheckCircle2 className="inline-block w-5 h-5 text-green-500 mr-2" />
+                    {feature}
                   </li>
                 ))}
               </ul>
-              <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full font-semibold">
-                Choose Plan
-              </button>
+              <Link
+                to="/register"
+                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full font-semibold"
+              >
+                Get Started
+              </Link>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="py-24 bg-gray-50">
-        <h2 className="text-4xl font-bold text-center mb-12">
-          Trusted by Educators
-        </h2>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 px-6">
-          {testimonials.map((t, index) => (
-            <motion.div
-              key={t.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 }}
-              className="p-8 bg-white rounded-3xl border border-gray-200 shadow-lg"
-            >
-              <p className="italic text-gray-700 mb-4">“{t.text}”</p>
-              <div className="font-semibold text-indigo-600">{t.name}</div>
-              <div className="text-sm text-gray-500">{t.role}</div>
-            </motion.div>
+      {/* TESTIMONIALS SECTION */}
+      <section className="py-24 bg-gray-100 text-center">
+        <h2 className="text-4xl font-bold mb-12">What People Are Saying</h2>
+        <div className="max-w-3xl mx-auto">
+          {testimonials.map((testimonial, index) => (
+            <div key={index} className="mb-10">
+              <p className="italic text-lg text-gray-600 mb-4">
+                "{testimonial.text}"
+              </p>
+              <p className="font-semibold text-gray-800">
+                - {testimonial.name}, <span className="text-gray-500">{testimonial.role}</span>
+              </p>
+            </div>
           ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-24 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white text-center">
-        <h2 className="text-4xl font-bold mb-6">Start Managing Smarter</h2>
-        <p className="mb-8 text-lg opacity-90">
-          Join thousands of institutions streamlining their academic workflow
-          with AssignPro.
-        </p>
-        <div className="flex justify-center gap-6">
-          <Link
-            to="/login"
-            className="px-8 py-4 rounded-full bg-white text-purple-600 font-semibold shadow-lg hover:shadow-xl"
-          >
-            Login
-          </Link>
-          <Link
-            to="/register"
-            className="px-8 py-4 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 font-semibold shadow-lg hover:shadow-xl"
-          >
-            Sign Up
-          </Link>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="py-6 text-center border-t border-gray-200 text-gray-500 text-sm">
-        © {new Date().getFullYear()} AssignPro — Empowering Digital Education.
+      <footer className="bg-gray-900 text-white text-center py-6">
+        <p>© 2025 AssignPro. All Rights Reserved.</p>
       </footer>
     </div>
   );
