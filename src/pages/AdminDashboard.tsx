@@ -185,7 +185,7 @@ const AdminDashboard: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50/30 transition-colors">
+                      <tr key={user._id} className="hover:bg-gray-50/30 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">{user.name}</div>
@@ -195,8 +195,8 @@ const AdminDashboard: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <select
                             value={user.role}
-                            onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                            disabled={actionLoading === user.id}
+                            onChange={(e) => handleUpdateRole(user._id, e.target.value)}
+                            disabled={actionLoading === user._id}
                             className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           >
                             <option value="student">Student</option>
@@ -214,16 +214,16 @@ const AdminDashboard: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           {!user.approved && (
                             <button
-                              onClick={() => handleApproveUser(user.id)}
-                              disabled={actionLoading === user.id}
+                              onClick={() => handleApproveUser(user._id)}
+                              disabled={actionLoading === user._id}
                               className="text-green-600 hover:text-green-900 disabled:opacity-50"
                             >
                               <UserCheck className="h-5 w-5" />
                             </button>
                           )}
                           <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            disabled={actionLoading === user.id}
+                            onClick={() => handleDeleteUser(user._id)}
+                            disabled={actionLoading === user._id}
                             className="text-red-600 hover:text-red-900 disabled:opacity-50"
                           >
                             <Trash2 className="h-5 w-5" />
@@ -248,7 +248,7 @@ const AdminDashboard: React.FC = () => {
               ) : (
                 pendingUsers.map((user) => (
                   <motion.div
-                    key={user.id}
+                    key={user._id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20"
@@ -270,8 +270,8 @@ const AdminDashboard: React.FC = () => {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => handleApproveUser(user.id)}
-                          disabled={actionLoading === user.id}
+                          onClick={() => handleApproveUser(user._id)}
+                          disabled={actionLoading === user._id}
                           className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
                         >
                           <UserCheck className="h-4 w-4" />
@@ -280,8 +280,8 @@ const AdminDashboard: React.FC = () => {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDeleteUser(user.id)}
-                          disabled={actionLoading === user.id}
+                          onClick={() => handleDeleteUser(user._id)}
+                          disabled={actionLoading === user._id}
                           className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
                         >
                           <UserX className="h-4 w-4" />

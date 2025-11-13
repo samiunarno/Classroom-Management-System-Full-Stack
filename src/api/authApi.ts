@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   role: 'admin' | 'monitor' | 'student';

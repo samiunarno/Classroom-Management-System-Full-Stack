@@ -21,7 +21,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({ message: 'Token is not valid' });
     }
 
-    if (!user.approved) {
+    if (!user.approved && user.role !== 'admin') {
       return res.status(403).json({ message: 'Account not approved by admin' });
     }
 
