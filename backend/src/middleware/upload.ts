@@ -4,13 +4,10 @@ import multer from 'multer';
 export const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 20 * 1024 * 1024, // 20MB limit (আপনার প্রয়োজন অনুযায়ী সাইজ বাড়াতে পারেন)
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed'));
-    }
+    // সব ধরনের ফাইল গ্রহণ
+    cb(null, true);  // কোনো ফাইল টাইপ চেক করা হচ্ছে না, সব অনুমোদিত
   },
 });
