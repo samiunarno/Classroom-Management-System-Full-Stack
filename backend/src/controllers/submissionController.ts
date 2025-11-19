@@ -5,6 +5,13 @@ import { AuthRequest } from '../middleware/auth.js';
 import { validatePdfFile } from '../utils/validateFile.js';
 import { isDeadlinePassed } from '../utils/validateDeadline.js';
 import { sendSubmissionEmail } from '../services/emailService.js';
+import { TextDecoder } from 'util';
+
+// 🔥 Fix mojibake from multer
+const decodeFilename = (name: string) => {
+  const bytes = Buffer.from(name, 'binary');  // Interpret raw bytes
+  return new TextDecoder('utf-8').decode(bytes); // Convert to UTF-8
+};
 
 export const submitAssignment = async (req: AuthRequest, res: Response) => {
   try {
@@ -15,24 +22,40 @@ export const submitAssignment = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // Validate file
+    // -----------------------------
+    // 🔥 NEW DEBUG LOGS + FIX
+    // -----------------------------
+    console.log("🔥 RAW RECEIVED NAME:", file.originalname);
+    console.log("🔥 RAW BYTES:", Buffer.from(file.originalname));
+
+    const decodedName = decodeFilename(file.originalname)
+      .trim()
+      .normalize("NFKC");
+
+    console.log("🔥 DECODED NAME:", decodedName);
+
+    // Replace multer name with decoded UTF-8 name
+    file.originalname = decodedName;
+    // -----------------------------
+
+    // Validate file (now using corrected filename)
     const fileValidation = validatePdfFile(file);
     if (!fileValidation.valid) {
       return res.status(400).json({ message: fileValidation.error });
     }
 
-    // Check if assignment exists
+    // Check assignment exists
     const assignment = await Assignment.findById(id);
     if (!assignment) {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    // Check deadline
+    // Deadline check
     if (isDeadlinePassed(assignment.deadline)) {
       return res.status(400).json({ message: 'Submission deadline has passed' });
     }
 
-    // Check if already submitted
+    // Check if user already submitted
     const existingSubmission = await Submission.findOne({
       assignmentId: id,
       studentId: req.user!._id
@@ -43,7 +66,7 @@ export const submitAssignment = async (req: AuthRequest, res: Response) => {
     }
 
     try {
-      // Send email with PDF attachment
+      // Email PDF
       const emailMessageId = await sendSubmissionEmail(
         req.user!.name,
         assignment.title,
@@ -51,7 +74,7 @@ export const submitAssignment = async (req: AuthRequest, res: Response) => {
         file.buffer
       );
 
-      // Save submission record
+      // Save submission
       const submission = new Submission({
         assignmentId: id,
         studentId: req.user!._id,
@@ -69,15 +92,21 @@ export const submitAssignment = async (req: AuthRequest, res: Response) => {
           uploadedAt: submission.uploadedAt
         }
       });
+
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
       return res.status(500).json({ message: 'Failed to send submission email' });
     }
+
   } catch (error) {
     console.error('Submission error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// ------------------------------------------------------------
+// ❗ Below sections unchanged (you asked to update ONLY this file)
+// ------------------------------------------------------------
 
 export const getAssignmentSubmissions = async (req: Request, res: Response) => {
   try {

@@ -1,20 +1,22 @@
-export const validatePdfFile = (file: Express.Multer.File): { valid: boolean; error?: string } => {
-  // Check if file exists
-  if (!file) {
-    return { valid: false, error: 'No file uploaded' };
+export const validatePdfFile = (file: Express.Multer.File) => {
+  if (!file) return { valid: false, error: "No file uploaded" };
+
+  if (file.mimetype !== "application/pdf") {
+    return { valid: false, error: "Only PDF files are allowed" };
   }
 
-  // Check file type
-  if (file.mimetype !== 'application/pdf') {
-    return { valid: false, error: 'Only PDF files are allowed' };
-  }
+  // Normalize Chinese unicode + remove spaces
+  const cleanName = file.originalname.trim().normalize("NFKC");
 
-  // Check filename pattern (Chinese characters + .pdf)
-  const filenameRegex = /^[\u4E00-\u9FFF]+\.pdf$/;
-  if (!filenameRegex.test(file.originalname)) {
-    return { 
-      valid: false, 
-      error: 'Filename must contain only Chinese characters and end with .pdf (e.g., 王小明.pdf)' 
+  console.log("🔥 CLEAN NAME:", cleanName);
+
+  // EXACT pure Chinese + .pdf
+  const regex = /^[\u4E00-\u9FFF]+\.pdf$/;
+
+  if (!regex.test(cleanName)) {
+    return {
+      valid: false,
+      error: "Filename must contain only Chinese characters and end with .pdf (e.g., 王小明.pdf)",
     };
   }
 
