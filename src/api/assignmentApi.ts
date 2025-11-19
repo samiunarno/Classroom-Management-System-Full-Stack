@@ -80,12 +80,26 @@ export const assignmentApi = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await axiosClient.post(`/assignments/${id}/submit`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    console.log('📤 Uploading file:', {
+      filename: file.name,
+      size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+      type: file.type
     });
-    return response.data;
+
+    try {
+      const response = await axiosClient.post(`/assignments/${id}/submit`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 120000, // 2 minutes timeout
+      });
+      
+      console.log('✅ Upload successful');
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Upload failed:', error);
+      throw error;
+    }
   },
 
   getAssignmentSubmissions: async (id: string): Promise<Submission[]> => {

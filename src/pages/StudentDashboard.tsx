@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Upload, Clock, CheckCircle, AlertCircle, Calendar, FileText } from 'lucide-react';
+import { BookOpen, Upload, Clock, CheckCircle, AlertCircle, Calendar, FileText, X } from 'lucide-react';
 import { assignmentApi, Assignment, Stats } from '../api/assignmentApi';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -11,6 +11,8 @@ const StudentDashboard: React.FC = () => {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState('');
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   useEffect(() => {
     loadData();
@@ -32,7 +34,8 @@ const StudentDashboard: React.FC = () => {
   };
 
   const validateFilename = (filename: string): boolean => {
-    const regex = /^[\u4E00-\u9FFF]+\.pdf$/;
+    // More flexible filename validation
+    const regex = /^[\u4E00-\u9FFFA-Za-z0-9\s_\-]+\.pdf$/i;
     return regex.test(filename);
   };
 
@@ -52,14 +55,35 @@ const StudentDashboard: React.FC = () => {
       return;
     }
 
-    // Validate filename
-    if (!validateFilename(file.name)) {
-      setUploadError('Filename must contain only Chinese characters and end with .pdf (e.g., 王小明.pdf)');
+    // Validate file size (5MB max for faster upload)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setUploadError(`File size must be less than 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       setSelectedFile(null);
       return;
     }
 
+    // Validate filename
+    if (!validateFilename(file.name)) {
+      setUploadError('Filename must contain Chinese/English characters, numbers, spaces, underscores, or hyphens and end with .pdf');
+      setSelectedFile(null);
+      return;
+    }
+
+    console.log('✅ File validated:', {
+      name: file.name,
+      size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+      type: file.type
+    });
+
     setSelectedFile(file);
+  };
+
+  const clearFileSelection = () => {
+    setSelectedFile(null);
+    setUploadError('');
+    setFileInputKey(Date.now());
+    setUploadProgress(0);
   };
 
   const handleSubmit = async (assignmentId: string) => {
@@ -70,13 +94,54 @@ const StudentDashboard: React.FC = () => {
 
     setUploadingId(assignmentId);
     setUploadError('');
+    setUploadProgress(0);
 
     try {
-      await assignmentApi.submitAssignment(assignmentId, selectedFile);
-      setSelectedFile(null);
-      await loadData(); // Refresh data to show updated submission status
+      console.log('🚀 Starting upload for assignment:', assignmentId);
+      
+      // Create custom axios request
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      const response = await assignmentApi.submitAssignment(assignmentId, selectedFile);
+      
+      // Success
+      console.log('🎉 Upload completed successfully');
+      clearFileSelection();
+      await loadData();
+      
     } catch (error: any) {
-      setUploadError(error.response?.data?.message || 'Upload failed. Please try again.');
+      console.error('💥 Upload error:', error);
+      setUploadProgress(0);
+      
+      // Detailed error handling
+      if (error.code === 'ECONNABORTED') {
+        setUploadError('Upload took too long. Please try with a smaller file or check your internet connection.');
+      } else if (error.message === 'Network Error') {
+        setUploadError('Network error. Please check your internet connection.');
+      } else if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.statusText;
+        
+        switch (status) {
+          case 400:
+            setUploadError(`Invalid request: ${message}`);
+            break;
+          case 401:
+            setUploadError('Please login again');
+            break;
+          case 413:
+            setUploadError('File too large. Please choose a smaller file.');
+            break;
+          case 500:
+            setUploadError('Server error. Please try again later.');
+            break;
+          default:
+            setUploadError(`Upload failed: ${message} (Status: ${status})`);
+        }
+      } else {
+        setUploadError('Upload failed. Please try again.');
+      }
     } finally {
       setUploadingId(null);
     }
@@ -204,51 +269,118 @@ const StudentDashboard: React.FC = () => {
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">Submit Assignment</h4>
                       
                       {uploadError && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                          {uploadError}
-                        </div>
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start space-x-2"
+                        >
+                          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="font-medium">Upload Error</p>
+                            <p className="text-sm">{uploadError}</p>
+                          </div>
+                          <button 
+                            onClick={() => setUploadError('')}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </motion.div>
                       )}
 
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Upload PDF (Chinese filename only, e.g., 王小明.pdf)
+                            Upload PDF (Chinese/English filename, e.g., 王小明.pdf or assignment1.pdf)
                           </label>
                           <input
+                            key={fileInputKey}
                             type="file"
                             accept=".pdf"
                             onChange={handleFileSelect}
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                           />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Maximum file size: 5MB • Allowed: PDF files only
+                          </p>
                         </div>
 
                         {selectedFile && (
-                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <p className="text-green-800 text-sm">
-                              Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between"
+                          >
+                            <div>
+                              <p className="text-green-800 font-medium">
+                                {selectedFile.name}
+                              </p>
+                              <p className="text-green-600 text-sm">
+                                Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                            <button
+                              onClick={clearFileSelection}
+                              className="text-green-600 hover:text-green-800 p-1"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </motion.div>
+                        )}
+
+                        {/* Upload Button with Progress */}
+                        <div className="space-y-2">
+                          <motion.button
+                            whileHover={{ scale: selectedFile ? 1.02 : 1 }}
+                            whileTap={{ scale: selectedFile ? 0.98 : 1 }}
+                            onClick={() => handleSubmit(assignment._id)}
+                            disabled={!selectedFile || uploadingId === assignment._id}
+                            className="relative w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                          >
+                            {uploadingId === assignment._id ? (
+                              <>
+                                {/* Progress Bar Background */}
+                                <div 
+                                  className="absolute inset-0 bg-gradient-to-r from-purple-700 to-blue-700 transition-all duration-300" 
+                                  style={{ width: `${uploadProgress}%` }} 
+                                />
+                                
+                                {/* Content */}
+                                <div className="relative z-10 flex items-center space-x-2">
+                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                                  <span>
+                                    {uploadProgress > 0 ? `Uploading... ${uploadProgress}%` : 'Starting upload...'}
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-5 w-5" />
+                                <span>Submit Assignment</span>
+                              </>
+                            )}
+                          </motion.button>
+
+                          {/* Progress Bar */}
+                          {uploadingId === assignment._id && (
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-green-500 h-2 rounded-full transition-all duration-300 ease-out"
+                                style={{ width: `${uploadProgress}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Upload Tips */}
+                        {!uploadingId && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-blue-800 text-sm">
+                              <strong>Tip:</strong> For faster uploads, keep files under 2MB. 
+                              If upload fails, check your internet connection and try again.
                             </p>
                           </div>
                         )}
-
-                        <motion.button
-                          whileHover={{ scale: selectedFile ? 1.02 : 1 }}
-                          whileTap={{ scale: selectedFile ? 0.98 : 1 }}
-                          onClick={() => handleSubmit(assignment._id)}
-                          disabled={!selectedFile || uploadingId === assignment._id}
-                          className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {uploadingId === assignment._id ? (
-                            <>
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                              <span>Uploading...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="h-5 w-5" />
-                              <span>Submit Assignment</span>
-                            </>
-                          )}
-                        </motion.button>
                       </div>
                     </div>
                   )}
