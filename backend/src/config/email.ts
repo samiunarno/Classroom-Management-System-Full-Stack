@@ -29,28 +29,6 @@ export const createTransporter = () => {
   // Log the transporter settings for debugging purposes
   console.log('Created transporter with host:', process.env.SMTP_HOST);
   console.log('Using port:', process.env.SMTP_PORT);
-  console.log("SMTP User : ",process.env.SMTP_USER);
 
   return transporter;
 };
-const sendTestEmail = async () => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: process.env.SMTP_USER,  // Sender's email (should match the SMTP_USER)
-    to: '2021337@iub.edu.bd',      // A test recipient
-    subject: 'Test Email',       // Email subject
-    text: 'This is a test email to verify SMTP connection.', // Plain text body
-  };
-
-  // Send the test email
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Test email sent successfully:', info.response);
-  } catch (error) {
-    console.error('Error sending test email:', error);
-  }
-};
-
-// Call the function to send a test email
-sendTestEmail();
