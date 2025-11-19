@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 export const connectDB = async (): Promise<void> => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI as string);
-    console.log(`MongoDB Connected: ON `);
+    const con = await mongoose.connect(process.env.MONGO_URI as string);
+    console.log(`MongoDB Connected: ON `, con);
   } catch (error) {
     console.error('connecting to MongoDB: OFF', error);
     process.exit(1);
