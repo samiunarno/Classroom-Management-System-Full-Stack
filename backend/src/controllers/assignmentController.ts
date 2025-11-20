@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
-import Assignment from '../models/Assignment.js';
-import Submission from '../models/Submission.js';
-import { AuthRequest } from '../middleware/auth.js';
+import Assignment from '../models/Assignment';
+import Submission from '../models/Submission';
+import { AuthRequest } from '../middleware/auth';
 
 const assignmentSchema = Joi.object({
   title: Joi.string().min(3).max(100).required(),
   description: Joi.string().min(10).required(),
-  deadline: Joi.date().iso().required()
+  deadline: Joi.date().iso().required(),
 });
 
 // Create a new assignment
@@ -15,12 +15,13 @@ export const createAssignment = async (req: AuthRequest, res: Response) => {
   try {
     const { error, value } = assignmentSchema.validate(req.body);
     if (error) {
+      console.log('Validation error:', error.details);
       return res.status(400).json({ message: error.details[0].message });
     }
 
     const { title, description, deadline } = value;
 
-    // Check if deadline is in the future
+    // Ensure the deadline is in the future
     if (new Date(deadline) <= new Date()) {
       return res.status(400).json({ message: 'Deadline must be in the future' });
     }
@@ -29,14 +30,16 @@ export const createAssignment = async (req: AuthRequest, res: Response) => {
       title,
       description,
       deadline,
-      createdBy: req.user!._id
+      createdBy: req.user!._id,
     });
 
     await assignment.save();
     await assignment.populate('createdBy', 'name email');
 
+    console.log('Assignment created successfully:', assignment);
     res.status(201).json(assignment);
   } catch (error) {
+    console.error('Error during assignment creation:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -48,28 +51,27 @@ export const getAllAssignments = async (req: AuthRequest, res: Response) => {
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
 
-    // If student, include submission status
     if (req.user?.role === 'student') {
       const assignmentsWithStatus = await Promise.all(
         assignments.map(async (assignment) => {
           const submission = await Submission.findOne({
             assignmentId: assignment._id,
-            studentId: req.user!._id
+            studentId: req.user!._id,
           });
 
           return {
             ...assignment.toJSON(),
             hasSubmitted: !!submission,
-            submissionDate: submission?.uploadedAt
+            submissionDate: submission?.uploadedAt,
           };
         })
       );
-
       return res.json(assignmentsWithStatus);
     }
 
     res.json(assignments);
   } catch (error) {
+    console.error('Error fetching assignments:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -77,8 +79,7 @@ export const getAllAssignments = async (req: AuthRequest, res: Response) => {
 // Get assignment by ID
 export const getAssignmentById = async (req: Request, res: Response) => {
   try {
-    const assignment = await Assignment.findById(req.params.id)
-      .populate('createdBy', 'name email');
+    const assignment = await Assignment.findById(req.params.id).populate('createdBy', 'name email');
 
     if (!assignment) {
       return res.status(404).json({ message: 'Assignment not found' });
@@ -86,6 +87,7 @@ export const getAssignmentById = async (req: Request, res: Response) => {
 
     res.json(assignment);
   } catch (error) {
+    console.error('Error fetching assignment by ID:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -95,6 +97,7 @@ export const updateAssignment = async (req: AuthRequest, res: Response) => {
   try {
     const { error, value } = assignmentSchema.validate(req.body);
     if (error) {
+      console.log('Validation error:', error.details);
       return res.status(400).json({ message: error.details[0].message });
     }
 
@@ -118,6 +121,7 @@ export const updateAssignment = async (req: AuthRequest, res: Response) => {
 
     res.json(updatedAssignment);
   } catch (error) {
+    console.error('Error updating assignment:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -151,10 +155,7 @@ export const deleteAssignment = async (req: AuthRequest, res: Response) => {
     // Send success response
     res.json({ message: 'Assignment deleted successfully' });
   } catch (error) {
-    // Log error details for debugging
     console.error('Error during assignment deletion:', error);
-
-    // Send server error response
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -166,15 +167,18 @@ export const getMonitorStats = async (req: AuthRequest, res: Response) => {
     const totalSubmissions = await Submission.countDocuments();
 
     const upcomingAssignments = await Assignment.find({
-      deadline: { $gt: new Date() }
-    }).sort({ deadline: 1 }).limit(5);
+      deadline: { $gt: new Date() },
+    })
+      .sort({ deadline: 1 })
+      .limit(5);
 
     res.json({
       assignmentsCreated,
       totalSubmissions,
-      upcomingDeadlines: upcomingAssignments.length
+      upcomingDeadlines: upcomingAssignments.length,
     });
   } catch (error) {
+    console.error('Error fetching monitor stats:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -186,16 +190,18 @@ export const getStudentStats = async (req: AuthRequest, res: Response) => {
     const submittedAssignments = await Submission.countDocuments({ studentId: req.user!._id });
 
     const nextAssignment = await Assignment.findOne({
-      deadline: { $gt: new Date() }
-    }).sort({ deadline: 1 });
+      deadline: { $gt: new Date() },
+    })
+      .sort({ deadline: 1 });
 
     res.json({
       assignmentsAvailable: totalAssignments,
       submitted: submittedAssignments,
       pending: totalAssignments - submittedAssignments,
-      nextDeadline: nextAssignment?.deadline || null
+      nextDeadline: nextAssignment?.deadline || null,
     });
   } catch (error) {
+    console.error('Error fetching student stats:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
