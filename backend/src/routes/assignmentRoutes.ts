@@ -29,8 +29,10 @@ router.get('/:id', getAssignmentById);
 router.put('/:id', authorize('admin', 'monitor'), updateAssignment);
 router.delete('/:id', authorize('admin', 'monitor'), deleteAssignment);
 
-// Submission routes
+// Submission routes - students submit assignments
 router.post('/:id/submit', authorize('student'), upload.single('file'), submitAssignment);
+
+// Get submissions for an assignment - only for admins and monitors
 router.get('/:id/submissions', authorize('admin', 'monitor'), getAssignmentSubmissions);
 
 export default router;
