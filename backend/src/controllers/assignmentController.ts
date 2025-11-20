@@ -10,6 +10,7 @@ const assignmentSchema = Joi.object({
   deadline: Joi.date().iso().required()
 });
 
+// Create a new assignment
 export const createAssignment = async (req: AuthRequest, res: Response) => {
   try {
     const { error, value } = assignmentSchema.validate(req.body);
@@ -40,6 +41,7 @@ export const createAssignment = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Get all assignments
 export const getAllAssignments = async (req: AuthRequest, res: Response) => {
   try {
     const assignments = await Assignment.find()
@@ -72,6 +74,7 @@ export const getAllAssignments = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Get assignment by ID
 export const getAssignmentById = async (req: Request, res: Response) => {
   try {
     const assignment = await Assignment.findById(req.params.id)
@@ -87,6 +90,7 @@ export const getAssignmentById = async (req: Request, res: Response) => {
   }
 };
 
+// Update an assignment
 export const updateAssignment = async (req: AuthRequest, res: Response) => {
   try {
     const { error, value } = assignmentSchema.validate(req.body);
@@ -118,33 +122,49 @@ export const updateAssignment = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Delete an assignment
 export const deleteAssignment = async (req: AuthRequest, res: Response) => {
   try {
+    // Check if the assignment exists
     const assignment = await Assignment.findById(req.params.id);
     if (!assignment) {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    // Check if user is admin or the creator
-    if (req.user?.role !== 'admin' && assignment.createdBy.toString() !== req.user?._id.toString()) {
+    // Check if user is admin or the creator of the assignment
+    if (req.user?.role !== 'monitor' && assignment.createdBy.toString() !== req.user?._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this assignment' });
     }
 
-    await Assignment.findByIdAndDelete(req.params.id);
-    // Also delete all submissions for this assignment
-    await Submission.deleteMany({ assignmentId: req.params.id });
+    // Delete the assignment
+    const deletedAssignment = await Assignment.findByIdAndDelete(req.params.id);
+    if (!deletedAssignment) {
+      return res.status(500).json({ message: 'Failed to delete the assignment' });
+    }
 
+    // Delete all submissions for this assignment
+    const deletedSubmissions = await Submission.deleteMany({ assignmentId: req.params.id });
+    if (deletedSubmissions.deletedCount === 0) {
+      console.log('No submissions found to delete for this assignment');
+    }
+
+    // Send success response
     res.json({ message: 'Assignment deleted successfully' });
   } catch (error) {
+    // Log error details for debugging
+    console.error('Error during assignment deletion:', error);
+
+    // Send server error response
     res.status(500).json({ message: 'Server error' });
   }
 };
 
+// Get monitor stats
 export const getMonitorStats = async (req: AuthRequest, res: Response) => {
   try {
     const assignmentsCreated = await Assignment.countDocuments({ createdBy: req.user!._id });
     const totalSubmissions = await Submission.countDocuments();
-    
+
     const upcomingAssignments = await Assignment.find({
       deadline: { $gt: new Date() }
     }).sort({ deadline: 1 }).limit(5);
@@ -159,11 +179,12 @@ export const getMonitorStats = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Get student stats
 export const getStudentStats = async (req: AuthRequest, res: Response) => {
   try {
     const totalAssignments = await Assignment.countDocuments();
     const submittedAssignments = await Submission.countDocuments({ studentId: req.user!._id });
-    
+
     const nextAssignment = await Assignment.findOne({
       deadline: { $gt: new Date() }
     }).sort({ deadline: 1 });
