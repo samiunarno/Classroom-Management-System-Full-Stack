@@ -272,6 +272,8 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* start landing page  */}
+
       {/* FOOTER */}
       <footer className="bg-gray-900 text-white text-center py-6">
         <p>© 2025 AssignPro. All Rights Reserved.</p>
