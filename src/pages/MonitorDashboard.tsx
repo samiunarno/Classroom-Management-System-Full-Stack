@@ -159,7 +159,7 @@ const MonitorDashboard: React.FC = () => {
     { name: "Upcoming Deadlines", value: stats?.upcomingDeadlines ?? 0 },
   ];
 
-  console.log("submissions===> ", submissions);
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 py-8">
@@ -306,7 +306,7 @@ const MonitorDashboard: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <a
-                  href={'https://www.dropbox.com/scl/fo/c82eh5oxgnbcwoj5gibra/AGIUk3pl0-mh-clbm_0242w/nodejs_folder?rlkey=ey6e3tff9amuhx9hd07tntwt5&e=1&subfolder_nav_tracking=1&dl=0'}
+                  href={import.meta.env.VITE_DROPBOX_FOLDER_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl shadow hover:shadow-lg transition-all duration-300"
