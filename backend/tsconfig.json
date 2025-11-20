@@ -17,6 +17,6 @@
     "sourceMap": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "api/server.ts"],
   "exclude": ["node_modules", "dist"]
 }
