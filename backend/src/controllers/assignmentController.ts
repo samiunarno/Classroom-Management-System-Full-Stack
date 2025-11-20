@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
-import Assignment from '../models/Assignment';
-import Submission from '../models/Submission';
-import { AuthRequest } from '../middleware/auth';
+import Assignment from '../models/Assignment.js';
+import Submission from '../models/Submission.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const assignmentSchema = Joi.object({
   title: Joi.string().min(3).max(100).required(),
