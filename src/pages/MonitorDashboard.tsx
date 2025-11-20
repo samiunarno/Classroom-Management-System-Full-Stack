@@ -1,27 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Users, Calendar, Edit, Trash2, Clock, CheckCircle } from 'lucide-react';
+import {
+  Plus, FileText, Users, Calendar, Edit, Trash2, Clock, CheckCircle
+} from 'lucide-react';
 import { assignmentApi, Assignment, Stats, Submission } from '../api/assignmentApi';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 
 const MonitorDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'assignments' | 'create' | 'submissions'>('stats');
+  const [activeTab, setActiveTab] =
+    useState<'stats' | 'assignments' | 'create' | 'submissions'>('stats');
+
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     deadline: '',
   });
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [showModal, setShowModal] = useState(false);  // Control modal visibility
-  const [showDeleteModal, setShowDeleteModal] = useState(false);  // Delete confirmation modal
-  const [deleteId, setDeleteId] = useState<string | null>(null); // Store id of the assignment to delete
 
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Load assignments + stats
   useEffect(() => {
     loadData();
   }, []);
@@ -41,14 +51,17 @@ const MonitorDashboard: React.FC = () => {
     }
   };
 
+  // Load submissions
   const loadSubmissions = async () => {
     try {
-      const allSubmissions: Submission[] = [];
-      for (const assignment of assignments) {
-        const subs = await assignmentApi.getAssignmentSubmissions(assignment._id);
-        allSubmissions.push(...subs);
+      const all: Submission[] = [];
+
+      for (const a of assignments) {
+        const subs = await assignmentApi.getAssignmentSubmissions(a._id);
+        all.push(...subs);
       }
-      setSubmissions(allSubmissions);
+
+      setSubmissions(all);
     } catch (error) {
       console.error('Failed to load submissions:', error);
     }
@@ -60,6 +73,7 @@ const MonitorDashboard: React.FC = () => {
     }
   }, [activeTab, assignments]);
 
+  // Create/Edit assignment
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -67,14 +81,16 @@ const MonitorDashboard: React.FC = () => {
     try {
       if (editingId) {
         await assignmentApi.updateAssignment(editingId, formData);
-        setEditingId(null);
       } else {
         await assignmentApi.createAssignment(formData);
       }
+
       setFormData({ title: '', description: '', deadline: '' });
+      setEditingId(null);
       await loadData();
       setActiveTab('assignments');
-      setShowModal(false); // Close the modal after submit
+      setShowModal(false);
+
     } catch (error) {
       console.error('Failed to save assignment:', error);
     } finally {
@@ -89,20 +105,19 @@ const MonitorDashboard: React.FC = () => {
       deadline: new Date(assignment.deadline).toISOString().slice(0, 16),
     });
     setEditingId(assignment._id);
+    setShowModal(true);
     setActiveTab('create');
-    setShowModal(true);  // Open the modal for editing
   };
 
   const handleDelete = async () => {
-    if (deleteId) {
-      try {
-        await assignmentApi.deleteAssignment(deleteId);
-        await loadData();
-        setShowDeleteModal(false);  // Close the delete confirmation modal
-      } catch (error) {
-        console.error('Failed to delete assignment:', error);
-      }
+    if (!deleteId) return;
+    try {
+      await assignmentApi.deleteAssignment(deleteId);
+      await loadData();
+    } catch (error) {
+      console.error('Delete failed:', error);
     }
+    setShowDeleteModal(false);
   };
 
   if (loading) {
@@ -120,7 +135,6 @@ const MonitorDashboard: React.FC = () => {
     { id: 'submissions' as const, label: 'Submissions', icon: Users },
   ];
 
-  // Prepare data for the graph
   const chartData = [
     { name: 'Assignments Created', value: stats?.assignmentsCreated ?? 0 },
     { name: 'Total Submissions', value: stats?.totalSubmissions ?? 0 },
@@ -129,36 +143,41 @@ const MonitorDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+      <div className="max-w-7xl mx-auto px-4">
+
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-4xl font-bold text-transparent bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text">
             Monitor Dashboard
           </h1>
           <p className="text-gray-600">Manage assignments and track submissions</p>
         </motion.div>
 
-        {/* Tab Navigation */}
-        <div className="mb-8">
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-sm rounded-2xl p-1 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-200 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-white shadow-md text-purple-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <tab.icon className="h-5 w-5" />
-                <span className="font-medium">{tab.label}</span>
-              </button>
-            ))}
-          </div>
+        {/* Tabs */}
+        <div className="flex space-x-1 bg-white/60 backdrop-blur-sm rounded-2xl p-1 mb-8 overflow-x-auto">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => {
+                setActiveTab(t.id);
+
+                // FIX: open modal when tab is create
+                if (t.id === "create") {
+                  setShowModal(true);
+                  setEditingId(null);
+                  setFormData({ title: "", description: "", deadline: "" });
+                }
+              }}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl ${
+                activeTab === t.id
+                  ? "bg-white shadow text-purple-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <t.icon className="h-5 w-5" />
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* Tab Content */}
@@ -166,80 +185,95 @@ const MonitorDashboard: React.FC = () => {
           key={activeTab}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
         >
+          {/* ================= STATS ================= */}
           {activeTab === 'stats' && stats && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Stats Cards */}
-              <div className="col-span-1 md:col-span-3">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+
+          {/* ================= ASSIGNMENTS ================= */}
+          {activeTab === 'assignments' && (
+            <div className="space-y-4">
+              {assignments.map((a) => (
+                <motion.div
+                  key={a._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl p-6 shadow"
+                >
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="text-xl font-semibold">{a.title}</h3>
+                      <p className="text-gray-600 mt-2">{a.description}</p>
+                      <p className="text-gray-500 mt-2">
+                        Deadline: {new Date(a.deadline).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEdit(a)} className="p-2 text-blue-600">
+                        <Edit />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDeleteId(a._id);
+                          setShowDeleteModal(true);
+                        }}
+                        className="p-2 text-red-600"
+                      >
+                        <Trash2 />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           )}
 
-          {activeTab === 'assignments' && (
+          {/* ================= SUBMISSIONS ================= */}
+          {activeTab === 'submissions' && (
             <div className="space-y-4">
-              {assignments.length === 0 ? (
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 text-center shadow-lg border border-white/20">
-                  <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Assignments</h3>
-                  <p className="text-gray-600 mb-4">Create your first assignment to get started.</p>
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
-                  >
-                    Create Assignment
-                  </button>
+              {submissions.length === 0 ? (
+                <div className="bg-white p-6 text-center rounded-2xl shadow">
+                  <Users className="w-16 h-16 mx-auto text-gray-300" />
+                  <p>No submissions yet.</p>
                 </div>
               ) : (
-                assignments.map((assignment) => (
+                submissions.map((sub) => (
                   <motion.div
-                    key={assignment._id}
+                    key={sub._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20"
+                    className="bg-white rounded-2xl p-6 shadow border"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{assignment.title}</h3>
-                        <p className="text-gray-600 mb-4">{assignment.description}</p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-4 w-4" />
-                            <span>Deadline: {new Date(assignment.deadline).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>Created: {new Date(assignment.createdAt).toLocaleDateString()}</span>
-                          </div>
-                        </div>
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">
+                          {sub.studentId?.name || "Unknown Student"}
+                        </h3>
+
+                        <p className="text-gray-700 mt-1">
+                          <b>Assignment:</b> {sub.assignmentId?.title}
+                        </p>
+
+                        <p className="text-gray-700 mt-1">
+                          <b>Submitted At:</b> {new Date(sub.uploadedAt).toLocaleString()}
+                        </p>
+
+                        <p className="text-gray-700 mt-1">
+                          <b>File:</b> {sub.filename}
+                        </p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(assignment)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeleteId(assignment._id);
-                            setShowDeleteModal(true);  // Show delete confirmation modal
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
+
+                      <CheckCircle className="text-green-500 w-7 h-7" />
                     </div>
                   </motion.div>
                 ))
@@ -247,104 +281,79 @@ const MonitorDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Modal for Create/Edit Assignment */}
+          {/* ================= CREATE/EDIT MODAL (Fixed) ================= */}
           {showModal && (
-            <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-              <div className="bg-white p-8 rounded-xl shadow-lg w-96">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {editingId ? 'Edit Assignment' : 'Create New Assignment'}
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-8 rounded-xl w-96 shadow">
+                <h2 className="text-2xl font-semibold mb-6">
+                  {editingId ? "Edit Assignment" : "Create Assignment"}
                 </h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                      placeholder="Enter assignment title"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      required
-                      rows={4}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                      placeholder="Enter assignment description"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
-                    <input
-                      type="datetime-local"
-                      value={formData.deadline}
-                      onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                      required
-                      min={new Date().toISOString().slice(0, 16)}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    />
-                  </div>
-                  <div className="flex space-x-4">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      type="submit"
-                      disabled={submitting}
-                      className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
-                    >
-                      {submitting ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                          {editingId ? 'Updating...' : 'Creating...'}
-                        </div>
-                      ) : (
-                        editingId ? 'Update Assignment' : 'Create Assignment'
-                      )}
-                    </motion.button>
-                    {editingId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingId(null);
-                          setFormData({ title: '', description: '', deadline: '' });
-                          setShowModal(false);  // Close the modal
-                        }}
-                        className="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-400 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
+
+                <form onSubmit={handleSubmit}>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    placeholder="Title"
+                    required
+                    className="w-full mb-4 p-3 border rounded"
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  />
+
+                  <textarea
+                    value={formData.description}
+                    placeholder="Description"
+                    required
+                    className="w-full mb-4 p-3 border rounded"
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+
+                  <input
+                    type="datetime-local"
+                    value={formData.deadline}
+                    required
+                    className="w-full mb-4 p-3 border rounded"
+                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                  />
+
+                  <button className="w-full py-3 bg-purple-600 text-white rounded-xl">
+                    {editingId ? "Update" : "Create"}
+                  </button>
                 </form>
+
+                <button
+                  className="w-full mt-4 py-2 bg-gray-300 rounded"
+                  onClick={() => setShowModal(false)}
+                >
+                  Close
+                </button>
               </div>
             </div>
           )}
 
-          {/* Delete Confirmation Modal */}
+          {/* ================= DELETE MODAL ================= */}
           {showDeleteModal && (
-            <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-              <div className="bg-white p-8 rounded-xl shadow-lg w-96">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  Are you sure you want to delete this assignment?
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+              <div className="bg-white p-8 rounded-xl shadow w-80">
+                <h2 className="text-lg font-semibold mb-4">
+                  Delete this assignment?
                 </h2>
-                <div className="flex space-x-4">
+
+                <div className="flex gap-4">
                   <button
+                    className="flex-1 py-2 bg-red-600 text-white rounded"
                     onClick={handleDelete}
-                    className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    Yes, Delete
+                    Delete
                   </button>
+
                   <button
+                    className="flex-1 py-2 bg-gray-300 rounded"
                     onClick={() => setShowDeleteModal(false)}
-                    className="flex-1 py-3 bg-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-400 transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
+
               </div>
             </div>
           )}
